@@ -30,28 +30,22 @@ class Perceptron(object):
     
     def predict(self, X):
         return np.where(self.net_input(X) >= 0.0, 1, -1)
-    
-#s = os.path.join('https://archive.ics.uci.edu', 'ml', 'machine-learning-databases', 'iris', 'iris.data')
-#print('URL: ', s)
-#df = pd.read_csv(s, header=None, encoding='utf-8')
-#df.to_csv("irisdata.csv", index=False)
 
-def plot_irises_scatter(X):
-    plt.scatter(X[:50, 0], X[:50, 1],
+def plot_irises_scatter(ax, X):
+    ax.scatter(X[:50, 0], X[:50, 1],
                  color='red', marker='o', label='setosa')
-    plt.scatter(X[50:100, 0], X[50:100, 1],
+    ax.scatter(X[50:100, 0], X[50:100, 1],
                  color='blue', marker='x', label='versicolor')
-    plt.xlabel('sepal length [cm]')
-    plt.ylabel('petal length [cm]')
-    plt.legend(loc='upper left')
+    ax.set_xlabel('sepal length [cm]')
+    ax.set_ylabel('petal length [cm]')
+    ax.legend(loc='upper left')
 
-def plot_error_number_of_epochs(errors):
-    plt.plot(range(1, len(errors) + 1), errors, marker='o')
-    plt.xlabel('Epochs')
-    plt.ylabel('Number of updates')
+def plot_error_number_of_epochs(ax, errors):
+    ax.plot(range(1, len(errors) + 1), errors, marker='o')
+    ax.set_xlabel('Epochs')
+    ax.set_ylabel('Number of updates')
 
-
-def plot_decision_regions(X, y, classifier, resolution=0.02):
+def plot_decision_regions(ax, X, y, classifier, resolution=0.02):
     markers = ('s', 'x', 'o', '^', 'v')
     colors = ('red', 'blue', 'lightgreen', 'gray', 'cyan')
     cmap = ListedColormap(colors=colors[:len(np.unique(y))])
@@ -93,8 +87,7 @@ def plot_decision_regions_v2(ax, X, y, classifier, resolution=0.02):
     Z = Z.reshape(xx1.shape)
 
     ax.contourf(xx1, xx2, Z, alpha=0.3, cmap=cmap)
-    #ax.xlim(xx1.min(), xx1.max())
-    #ax.ylim(xx2.min(), xx2.max())
+    ax.set(xlim=(xx1.min(), xx1.max()), ylim=(xx2.min(), xx2.max()))
 
     for idx, cl in enumerate(np.unique(y)):
         ax.scatter(x=X[y == cl, 0],
@@ -128,27 +121,17 @@ def main():
     # https://matplotlib.org/stable/api/_as_gen/matplotlib.pyplot.subplots.html
 
     fig, ax = plt.subplots(2, 2, figsize=(10, 10))
-    ax[0, 0].scatter(X[:50, 0], X[:50, 1],
-                 color='red', marker='o', label='setosa')
-    ax[0, 0].scatter(X[50:100, 0], X[50:100, 1],
-                 color='blue', marker='x', label='versicolor')
-    ax[0, 0].set_xlabel('sepal length [cm]')
-    ax[0, 0].set_ylabel('petal length [cm]')
-    ax[0, 0].legend(loc='upper left')
+    plot_irises_scatter(ax[0, 0], X)
 
     ppn = Perceptron(eta=0.1, n_iter=10)
     ppn.fit(X, y)
 
-    ax[0, 1].plot(range(1, len(ppn.errors_) + 1), ppn.errors_, marker='o')
-    ax[0, 1].set_xlabel('Epochs')
-    ax[0, 1].set_ylabel('Number of updates')
-
+    plot_error_number_of_epochs(ax[0 ,1], ppn.errors_)
     plot_decision_regions_v2(ax[1, 0], X, y, classifier=ppn)
-
     ax[1, 1].set_axis_off()
     #ax[1, 1].set_visible(False)
-
     plt.show()
+
 if __name__ == '__main__':
     main()
 
