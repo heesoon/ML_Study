@@ -11,23 +11,24 @@ class SVM(object):
         self.eta = eta
         self.n_iter = n_iter
         self.w = []
-        self.b = []
+        self.b = 0
         self.C = C
 
     def init_weight(self, X):
         self.w = np.zeros(X.shape[1]) # number of characteristic
 
     def update_weight(self, dw, db):
-        self.w[1:] -= self.eta * dw
-        self.w[0] -= self.eta * db
+        self.w -= self.eta * dw
+        self.b -= self.eta * db
 
     def hinge_loss(self, X, y):
-        print('X : ', X)
-        print(self.w[1:])
-        return y * (np.dot(X, self.w[1:]) + self.w[0])
+        return y * (np.dot(X, self.w) + self.b)
     
     def activation(self, z):
         return z
+
+    def predict(self, X):
+        return np.sign(np.dot(X, self.w) + self.b)
 
     def fit(self, X, y):
         self.init_weight(X)
@@ -98,7 +99,7 @@ def main():
     
     svm = SVM()
     svm.fit(X_train_01_subset, y_train_01_subset)
-    #plot_decision_regions(X=X_train_01_subset, y=y_train_01_subset, classifier=lrgd)
+    plot_decision_regions(X=X_train_01_subset, y=y_train_01_subset, classifier=svm)
 
 if __name__ == '__main__':
     main()
