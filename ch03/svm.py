@@ -22,7 +22,7 @@ class SVM(object):
         self.b -= self.eta * db
 
     def hinge_loss(self, X, y):
-        return y * (np.dot(X, self.w) + self.b)
+        return 1 - y * (np.dot(X, self.w) + self.b)
     
     def activation(self, z):
         return z
@@ -33,14 +33,13 @@ class SVM(object):
     def fit(self, X, y):
         self.init_weight(X)
         for i in range(self.n_iter):
+            dw = 0
+            db = 0
             for idx, xi in enumerate(X):
-                if self.hinge_loss(xi, y[idx]) < 1:
-                    dw = self.w - self.C * y[idx]*xi
-                    db = -self.C * y[idx]
-                else:
-                    dw = self.w
-                    db = 0
-                self.update_weight(dw, db)
+                if self.hinge_loss(xi, y[idx]) > 0:
+                    dw += self.C * y[idx]*xi
+                    db += self.C * y[idx]
+            self.update_weight(dw, db)
         print('optimum w :', self.w)
         print('optimum b :', self.b)
         return self
@@ -97,7 +96,7 @@ def main():
     X_train_01_subset = X_train_std[(y_train == 0) | (y_train == 1)]
     y_train_01_subset = y_train[(y_train == 0) | (y_train == 1)]
     
-    svm = SVM()
+    svm = SVM(n_iter=10, C=0.5)
     svm.fit(X_train_01_subset, y_train_01_subset)
     plot_decision_regions(X=X_train_01_subset, y=y_train_01_subset, classifier=svm)
 
