@@ -5,18 +5,20 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-def plot_explained_variance_ratio(eigen_vals):
-    tot = sum(eigen_vals)
+def plot_2d_scatter(X_train_pca, y_train):
+    colors = ['r', 'b', 'g']
+    markers = ['s', 'x', 'o']
 
-    val_exp = [(i/tot) for i in sorted(eigen_vals, reverse=True)]
-    cum_val_exp = np.cumsum(val_exp)
+    for l, c, m in zip(np.unique(y_train), colors, markers):
+        plt.scatter(X_train_pca[y_train == l, 0], 
+                    X_train_pca[y_train == l, 1], 
+                    c=c, label=l, marker=m)
 
-    plt.bar(range(1, len(eigen_vals)+1), val_exp, alpha=0.5, align='center', label='Individual explained variance')
-    plt.step(range(1, len(eigen_vals)+1), cum_val_exp, where='mid', label='Cumulative explained variance')
-    plt.ylabel('Explained variance ratio')
-    plt.xlabel('Principal component index')
-    plt.legend(loc='best')
+    plt.xlabel('PC 1')
+    plt.ylabel('PC 2')
+    plt.legend(loc='lower left')
     plt.tight_layout()
+    # plt.savefig('images/05_03.png', dpi=300)
     plt.show()
 
 def main():
@@ -77,14 +79,24 @@ def main():
     
     eigen_vals, eigen_vecs = np.linalg.eig(np.linalg.inv(S_W).dot(S_B))
     
+    # (고윳값, 고유벡터) 튜플의 리스트를 만듭니다.
     eigen_pairs = [(np.abs(eigen_vals[i]), eigen_vecs[:, i])
                 for i in range(len(eigen_vals))]
-    eigen_pairs = sorted(eigen_pairs, key=lambda k:k[0], reverse=True)
-    
+
+    # (고윳값, 고유벡터) 튜플을 큰 값에서 작은 값 순서대로 정렬합니다.
+    eigen_pairs = sorted(eigen_pairs, key=lambda k: k[0], reverse=True)
+
+    # 고윳값의 역순으로 올바르게 정렬되었는지 확인합니다.
+    print('내림차순의 고윳값:\n')
     for eigen_val in eigen_pairs:
         print(eigen_val[0])
     
-    plot_explained_variance_ratio(eigen_vals)
+    w = np.hstack((eigen_pairs[0][1][:, np.newaxis].real,
+                eigen_pairs[1][1][:, np.newaxis].real))
+    print('행렬 W:\n', w)
+    
+    X_train_lda = X_train_std.dot(w)
+    plot_2d_scatter(X_train_lda, y_train)
 
 if __name__ == '__main__':
     main()
