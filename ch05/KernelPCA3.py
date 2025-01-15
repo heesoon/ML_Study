@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
-from sklearn.datasets import make_moons
+from sklearn.datasets import make_circles
 from scipy.spatial.distance import pdist, squareform
 from scipy.linalg import eigh
 
@@ -15,14 +15,14 @@ def plot(X, y):
 
     ax[0].scatter(X[y==0, 0], X[y==0, 1], color='red', marker='^', alpha=0.5)
     ax[0].scatter(X[y==1, 0], X[y==1, 1], color='blue', marker='o', alpha=0.5)
-    ax[1].scatter(X[y==0, 0], np.zeros((50, 1))+0.02, color='red', marker='^', alpha=0.5)
-    ax[1].scatter(X[y==1, 0], np.zeros((50, 1))-0.02, color='blue', marker='o', alpha=0.5)
+    ax[1].scatter(X[y==0, 0], np.zeros((500, 1))+0.02, color='red', marker='^', alpha=0.5)
+    ax[1].scatter(X[y==1, 0], np.zeros((500, 1))-0.02, color='blue', marker='o', alpha=0.5)
     ax[0].set_xlabel('PC1')
     ax[0].set_ylabel('PC2')
     ax[1].set_ylim([-1, 1])
     ax[1].set_yticks([])
     ax[1].set_xlabel('PC1')
-
+    
     plt.tight_layout()
     plt.show()
 
@@ -44,12 +44,10 @@ def rbf_kernel_pca(X, gamma, n_components):
     return X_pc
 
 def main():
-    X, y = make_moons(n_samples=100, random_state=123)
-    #plt.scatter(X[y==0, 0], X[y==0, 1], color='red', marker='^', alpha=0.5)
-    #plt.scatter(X[y==1, 0], X[y==1, 1], color='blue', marker='o', alpha=0.5)
-
+    X, y = make_circles(n_samples=1000, random_state=123, noise=0.1, factor=0.2)
     scikit_pca = PCA(n_components=2)
     X_spca = scikit_pca.fit_transform(X)
+    
     plot(X_spca, y)
 
 if __name__ == '__main__':

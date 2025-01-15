@@ -23,6 +23,7 @@ def plot(X, y):
     ax[1].set_yticks([])
     ax[1].set_xlabel('PC1')
 
+    plt.tight_layout()
     plt.show()
 
 def rbf_kernel_pca(X, gamma, n_components):
