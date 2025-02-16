@@ -1,43 +1,74 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
-
-class MyModel(tf.keras.Model):
-    def __init__(self):
-        super(MyModel, self).__init__()
-        # Keras에서 가중치로 정의
-        self.w = self.add_weight(name='weight', shape=(), initializer='zeros', trainable=True)
-        self.b = self.add_weight(name='bias', shape=(), initializer='zeros', trainable=True)
-
-    def call(self, x):
-        return self.w * x + self.b
-
-def loss_fn(y_true, y_pred):
-    return tf.reduce_mean(tf.square(y_true - y_pred))
+import tensorflow_datasets as tfds
 
 def main():
-    X_train = np.arange(10).reshape((10, 1))
-    y_train = np.array([1.0, 1.3, 3.1, 2.0, 5.0, 6.3, 6.6, 7.4, 8.0, 9.0])
-
-    X_train_norm = (X_train - np.mean(X_train)) / np.std(X_train)
-
-    model = MyModel()
+    iris, iris_info = tfds.load('iris', with_info=True)
+    #print(iris_info)
     
     tf.random.set_seed(1)
-    num_epochs = 200
-    batch_size = 1
-    learning_rate = 0.01  # 학습률 설정
-
-    model.compile(optimizer=tf.keras.optimizers.SGD(learning_rate=learning_rate), 
-                  loss=loss_fn)
+    ds_orig = iris['train']
+    ds_orig = ds_orig.shuffle(150, reshuffle_each_iteration=False)
+    ds_train_orig = ds_orig.take(100)
+    ds_test = ds_orig.skip(100)
     
-    # Keras의 model.fit() 사용
-    model.fit(X_train_norm, y_train, 
-              epochs=num_epochs, batch_size=batch_size, 
-              verbose=1)
+    ds_train_orig = ds_train_orig.map(
+        lambda x: (x['features'], x['label'])
+    )
 
-    # 최종 모델 파라미터 출력
-    print(f'Final weight: {model.w.numpy()}, Final bias: {model.b.numpy()}')
+    ds_test = ds_test.map(
+        lambda x: (x['features'], x['label'])
+    )
+    
+    iris_model = tf.keras.Sequential([
+        tf.keras.layers.Dense(16, activation='sigmoid', name='fc1', input_shape=(4,)),
+        tf.keras.layers.Dense(3, activation='softmax', name='fc2')
+    ])
+    
+    iris_model.summary()
+    
+    iris_model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+
+    num_epochs = 100
+    training_size = 100
+    batch_size = 2
+    steps_per_epoch = int(np.ceil(training_size / batch_size))
+
+    ds_train = ds_train_orig.shuffle(buffer_size=training_size)
+    ds_train = ds_train.repeat()
+    ds_train = ds_train.batch(batch_size=batch_size)
+    ds_train = ds_train.prefetch(buffer_size=1000)
+
+    history = iris_model.fit(ds_train, epochs=num_epochs,
+                            steps_per_epoch=steps_per_epoch, 
+                            verbose=0)
+    
+    hist = history.history
+
+    results = iris_model.evaluate(ds_test.batch(50), verbose=0)
+    print('테스트 손실: {:.4f}   테스트 정확도: {:.4f}'.format(*results))
+
+    fig = plt.figure(figsize=(12, 5))
+    ax = fig.add_subplot(1, 2, 1)
+    ax.plot(hist['loss'], lw=3)
+    ax.set_title('Training loss', size=15)
+    ax.set_xlabel('Epoch', size=15)
+    ax.tick_params(axis='both', which='major', labelsize=15)
+
+    ax = fig.add_subplot(1, 2, 2)
+    ax.plot(hist['accuracy'], lw=3)
+    ax.set_title('Training accuracy', size=15)
+    ax.set_xlabel('Epoch', size=15)
+    ax.tick_params(axis='both', which='major', labelsize=15)
+    plt.tight_layout()
+    # plt.savefig('images/13_7.png', dpi=300)
+    plt.show()
+    
+    iris_model.save('iris-classifier.h5', 
+                    overwrite=True,
+                    include_optimizer=True,
+                    save_format='h5')
 
 if __name__ == '__main__':
     main()
